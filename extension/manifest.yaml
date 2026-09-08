@@ -1,0 +1,11 @@
+version: v1alpha1
+metadata:
+  name: nic-temperature
+  version: v0.1.0
+  author: William Goeller
+  description: |
+    Exposes Mellanox NIC ASIC temperatures through a continuously polled
+    Prometheus endpoint using the open-source mstflint temperature reader.
+  compatibility:
+    talos:
+      version: ">= v1.12.0 < v1.13.0"

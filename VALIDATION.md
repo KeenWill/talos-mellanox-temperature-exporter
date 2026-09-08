@@ -1,0 +1,40 @@
+# Initial validation
+
+Validated on 2026-09-08 UTC. This records what was tested, not a compatibility
+claim for every mlx5 NIC or Talos installation.
+
+| Check | Result |
+|---|---|
+| `go test -race -count=1 ./...` | Pass |
+| `go vet ./...` and `gofmt` | Pass |
+| `docker build --target test .` with pinned Go/C image | Pass |
+| Ordinary `exporter` Docker target | Pass; approximately 7.4 MB |
+| `talos-extension` Docker target | Pass; approximately 7.4 MB |
+| Exporter `--help`, vendor reader `--version` / `--help` in runtime image | Pass |
+| Static vendor binary ELF interpreter check | Pass |
+| Talos 1.12.6 `extensions.Load`, extension `Validate`, service `Spec.Validate` against extracted image | Pass |
+| `promtool check metrics` against live exposition | Pass |
+| ConnectX-4 MT4115 ASIC query through exporter | Pass, 68°C, collection success 1 |
+| Successive polling cycles | Pass; last-success timestamp advances, with PCI/interface/firmware identity |
+| Talos extension install, reboot, and supervised service lifecycle | Not performed |
+| Other NIC generations, other architectures, optical-module temperatures | Not validated |
+
+Automated tests cover device discovery, exclusion of VFs and other PCI drivers,
+allowlist validation, shared-interface identity, malformed/nonfinite/out-of-range
+responses, command failure/timeout/output bounds, failed and stale temperatures,
+discovery failure, label escaping and HTTP routes. The fake vendor command is the
+test executable itself: tests require no hardware, root, network or vendor tools.
+
+The live polling check ran this source as a static binary with the pinned
+mstflint source version on an existing Talos 1.12.6 kernel, in a temporary
+privileged test container. Only the selected PCI device path was writable.
+This establishes collection behavior; it does not establish the installed
+extension's boot lifecycle or least-privilege portability across runtimes.
+
+The Talos image intentionally grants writable sysfs for generic discovery and
+PCI command transport. Its root filesystem is read-only; temporary lockfiles
+use a bounded tmpfs. That is broader access than the selected-device hardware
+test. Review [PACKAGING.md](PACKAGING.md) before installation.
+
+There are no published release images yet. CI builds/tests packaging but does
+not publish it or deploy it to a node.

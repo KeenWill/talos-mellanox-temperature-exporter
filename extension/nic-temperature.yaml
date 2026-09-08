@@ -1,0 +1,26 @@
+name: nic-temperature
+container:
+  entrypoint: ./usr/local/bin/mellanox-temperature-exporter
+  environment:
+    - TMPDIR=/tmp
+  mounts:
+    # Talos checks that source exists even for tmpfs mounts. The filesystem
+    # type creates a new tmpfs; this does not bind the host /tmp directory.
+    - source: /tmp
+      destination: /tmp
+      type: tmpfs
+      options:
+        - nosuid
+        - nodev
+        - noexec
+        - mode=1777
+        - size=16m
+  security:
+    writeableRootfs: false
+    # The query is read-only at the firmware API, but PCI command transport
+    # writes config-space request/semaphore registers. Discovery resolves
+    # /sys/bus/pci/devices symlinks into the complete /sys/devices tree.
+    writeableSysfs: true
+    rootfsPropagation: private
+restart: always
+logToConsole: false

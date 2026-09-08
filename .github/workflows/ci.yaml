@@ -1,0 +1,24 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test-and-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Tests and static analysis with pinned toolchain
+        run: docker build --target test -t nic-temperature-test .
+      - name: Ordinary exporter image
+        run: docker build --target exporter -t nic-temperature-exporter:test .
+      - name: Talos extension image
+        run: docker build --target talos-extension -t nic-temperature-extension:test .
+      - name: Verify exporter and vendor reader entrypoints
+        run: |
+          docker run --rm --read-only nic-temperature-exporter:test --help
+          docker run --rm --read-only --entrypoint /usr/local/bin/mstmget_temp nic-temperature-exporter:test --version
